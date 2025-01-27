@@ -36,7 +36,68 @@ ebr_volumn_label:           db 'NANOBYTE OS'        ; 11 BYTespadd
 ebr_system_id:              db 'FAT12   '           ; 8 bytes pad it
 
 start:
-    jmp main
+    ;setup data segements
+    mov ax, 0                                       ; can't set ds/es directly
+    mov ds, ax
+    mov es, ax
+
+    mov ss, ax
+    mov sp, 0x7c00                                  ;stack grow down from where we are in memory
+
+    ;some BIOS might start from 07C0:0000 instead of 0000:7C00 
+    ;makes sure we're in the right location
+    push es
+    push word .after
+    retf
+.after:
+    ; read something from floppy
+    ; BIOS should set DL to 1
+    mov [ebr_drive_number], dl
+
+    ;loading mesage
+    mov si, msg_hello
+    call puts
+
+    ; read drive parameters
+    push es
+    mov ah, 08h
+    int 13h
+    jc floppy_error
+    pop es
+
+    and cl, 0x3F                                    ; remove top 2 bits
+    xor ch, ch
+    mov [bdb_sectors_per_track], cx                 ; sector count
+
+    inc dh
+    mov [bdb_heads], dh                             ; head count
+
+    ; read FAT root directory
+    mov ax, [bdb_sectors_per_fat]                   ; Compute LBA of root directory = reserved + fats * sectors_per_fat
+    mov bl, [bdb_fat_count]                
+    xor bh, bh
+    mul bx                                          ; ax = (fats * sectors_per_fat)
+    add ax, [bdb_reserved_sectors]                  ; ax = LBA of root directory
+    push ax
+
+    cli
+    hlt
+;
+; Error Handlers
+;
+floppy_error:
+    mov si, msg_read_failed
+    call puts
+    jmp wait_key_and_reboot
+
+wait_key_and_reboot:
+    mov ah, 0
+    int 16                                          ; wait for input
+    jmp 0FFFFh:0
+
+.halt:
+    cli                                             ; disables interrupts, so CPU can't exit the halt state
+    hlt
 
 ;
 ; Prints string to screen
@@ -64,45 +125,6 @@ puts:
     pop si    
     ret
 
-main:
-    ;setup data segements
-    mov ax, 0                                       ; can't set ds/es directly
-    mov ds, ax
-    mov es, ax
-
-    mov ss, ax
-    mov sp, 0x7c00                                  ;stack grow down from where we are in memory
-
-    ; read something from floppy
-    ; BIOS should set DL to 1
-    mov [ebr_drive_number], dl
-
-    mov ax, 1                                       ; LBA = 1, set to read from head 2
-    mov cl, 1                                       ; 1 sector to read
-    mov bx, 0x7E00                                  ; data should be after booloader
-    call disk_read
-
-    mov si, msg_hello
-    call puts
-
-    cli
-    hlt
-;
-; Error Handlers
-;
-floppy_error:
-    mov si, msg_read_failed
-    call puts
-    jmp wait_key_and_reboot
-
-wait_key_and_reboot:
-    mov ah, 0
-    int 16                                          ; wait for input
-    jmp 0FFFFh:0
-
-.halt:
-    cli                                             ; disables interrupts, so CPU can't exit the halt state
-    hlt
 
 ;
 ; Disk Rountines
@@ -208,7 +230,7 @@ disk_reset:
 
 
 
-msg_hello: db 'Hello world!', ENDL, 0
+msg_loading: db 'Loading.... ', ENDL, 0
 msg_read_failed: db 'Read from disk failed', ENDL, 0
 
 times 510-($-$$) db 0
