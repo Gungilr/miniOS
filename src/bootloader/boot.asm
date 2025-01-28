@@ -72,13 +72,74 @@ start:
     inc dh
     mov [bdb_heads], dh                             ; head count
 
-    ; read FAT root directory
-    mov ax, [bdb_sectors_per_fat]                   ; Compute LBA of root directory = reserved + fats * sectors_per_fat
+    ; Compute LBA of root directory = reserved + fats * sectors_per_fat
+    mov ax, [bdb_sectors_per_fat]                   
     mov bl, [bdb_fat_count]                
     xor bh, bh
     mul bx                                          ; ax = (fats * sectors_per_fat)
     add ax, [bdb_reserved_sectors]                  ; ax = LBA of root directory
     push ax
+
+    ; compute size of the root directory = (32 * number_of_sectors)
+    mov ax, [bdb_sectors_per_fat]
+    shl ax, 5                                       ; ax * 32
+    xor dx, dx                                      ; dx = 0 for remiander
+    div word [bdb_bytes_per_sector]                 ; does divison 
+
+    test dx, dx                                     ; checks if remainder is 0 or 1
+    jz root_dir_after
+    inc ax                                          ; rounds up the divison\
+
+
+.root_dir_after:
+
+    ; read root directory
+    mov cl, al                                      ; cl = number of sectors to read = size of the root directory
+    pop ax                                          ; al = LBA of the root directory
+    mov dl, [ebr_drive_number]                      ; dl = dirve number
+    mov bx, buffer                                  ; es:bx = buffer
+    call disk_read
+
+    ; search for kernel.bin
+    xor bx, bx
+    mov di, buffer
+
+.serach_kernel:
+    mov si, file_kernel_bin
+    mov cx, 11                                      ; comapre up to 11 chars
+    push di
+    repe cmpsb                                      ; compares si:di to es:di auto inc both 
+    pop di
+    je .found_kernel
+
+    add di, 32
+    inc, bx
+    cmp bx, [bdb_dir_entires_count]
+    jl .serach_kernel
+    jmp kernel_not_found_error:
+
+.found_kernel:
+
+    ; di should have the entry address
+    mov ax, [di + 26]                               ; first logical cluster field
+    mov [kernel_cluster], ax
+
+    ; load FAT from disk to memory
+    mov ax, [bdb_reserved_sectors]
+    mov bx, buffer
+    mov cl, [bdb_sectors_per_fat]
+    mov dl, [ebr_drive_number]
+    call disk_read
+
+    ; read kernel process FAT Chain
+    mov bx, KERNERL_LOAD_SEGEMENT
+    mov es, bx
+    mov bx, KERNERL_LOAD_OFFEST
+
+.load_kernel_loop:
+
+    ; read next cluster
+    mov ax, [kernel_cluster]
 
     cli
     hlt
@@ -87,6 +148,11 @@ start:
 ;
 floppy_error:
     mov si, msg_read_failed
+    call puts
+    jmp wait_key_and_reboot
+
+kernel_not_found_error:
+    mov si, msg_kernel_not_found
     call puts
     jmp wait_key_and_reboot
 
@@ -230,8 +296,16 @@ disk_reset:
 
 
 
-msg_loading: db 'Loading.... ', ENDL, 0
-msg_read_failed: db 'Read from disk failed', ENDL, 0
+msg_loading:                db 'Loading.... ', ENDL, 0
+msg_read_failed:            db 'Read from disk failed', ENDL, 0
+msg_kernel_not_found:       db 'Kernel bin not found', ENDL, 0
+file_kernel_bin:            db 'KERNEL  BIN', ENDL, 0
+kernel_cluster:             dw 0
+
+KERNERL_LOAD_SEGEMENT:      equ 0x2000
+KERNERL_LOAD_OFFEST:        equ 0
 
 times 510-($-$$) db 0
 dw 0AA55h
+
+buffer:
