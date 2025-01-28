@@ -55,7 +55,7 @@ start:
     mov [ebr_drive_number], dl
 
     ;loading mesage
-    mov si, msg_hello
+    mov si, msg_loading
     call puts
 
     ; read drive parameters
@@ -87,7 +87,7 @@ start:
     div word [bdb_bytes_per_sector]                 ; does divison 
 
     test dx, dx                                     ; checks if remainder is 0 or 1
-    jz root_dir_after
+    jz .root_dir_after
     inc ax                                          ; rounds up the divison\
 
 
@@ -113,10 +113,10 @@ start:
     je .found_kernel
 
     add di, 32
-    inc, bx
+    inc bx
     cmp bx, [bdb_dir_entires_count]
     jl .serach_kernel
-    jmp kernel_not_found_error:
+    jmp kernel_not_found_error
 
 .found_kernel:
 
@@ -140,6 +140,57 @@ start:
 
     ; read next cluster
     mov ax, [kernel_cluster]
+    ; not nice hardcoded value
+    add ax, 31                                      ; first cluster  = (kernel number - 2)  * sectors_per_cluster + start cluster
+                                                    ; start sector = reserved + fats + root directory size = 1 + 18 + 134 = 33
+
+    mov cl, 1
+    mov dl, [ebr_drive_number]
+    call disk_read
+
+    add bx, [bdb_bytes_per_sector]
+
+    ; computer location of next cluster
+    mov ax, [kernel_cluster]
+    mov cx, 3
+    mul cx
+    mov cx, 2
+    div cx
+
+    mov si, buffer
+    add si, ax
+    mov ax, [ds:si]                                 ; read entry from FAT table at index ax
+
+    or dx, dx
+    jz .even
+
+.odd:
+    shr ax, 4
+    jmp .next_cluster_after
+
+.even:
+    and ax, 0x0FFF
+
+.next_cluster_after:
+    cmp ax, 0xFF8                                   ; end of chain
+    jae .read_finish
+
+    mov [kernel_cluster], ax
+    jmp .load_kernel_loop
+
+.read_finish:
+
+    ; jump to our kernel 
+    mov dl, [ebr_drive_number]                      ; boot drive in dl
+
+    mov ax, KERNERL_LOAD_SEGEMENT                   ; set segment registers
+    mov ds, ax
+    mov es, ax
+    
+    jmp KERNERL_LOAD_SEGEMENT:KERNERL_LOAD_OFFEST
+
+    ; should never happen
+    jmp wait_key_and_reboot
 
     cli
     hlt
