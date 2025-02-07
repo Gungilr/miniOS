@@ -349,8 +349,8 @@ disk_reset:
 
 msg_loading:                db 'Loading.... ', ENDL, 0
 msg_read_failed:            db 'Read from disk failed', ENDL, 0
-msg_kernel_not_found:       db 'Kernel bin not found', ENDL, 0
-file_kernel_bin:            db 'KERNEL  BIN', ENDL, 0
+msg_kernel_not_found:       db 'STAGE2  BIN not found', ENDL, 0
+file_kernel_bin:            db 'STAGE2  BIN', ENDL, 0
 kernel_cluster:             dw 0
 
 KERNERL_LOAD_SEGEMENT:      equ 0x2000
