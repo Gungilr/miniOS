@@ -105,7 +105,7 @@ start:
     mov di, buffer
 
 .serach_kernel:
-    mov si, file_kernel_bin
+    mov si, file_stage2_bin
     mov cx, 11                                      ; comapre up to 11 chars
     push di
     repe cmpsb                                      ; compares si:di to es:di auto inc both 
@@ -122,7 +122,7 @@ start:
 
     ; di should have the entry address
     mov ax, [di + 26]                               ; first logical cluster field
-    mov [kernel_cluster], ax
+    mov [stage2_cluster], ax
 
     ; load FAT from disk to memory
     mov ax, [bdb_reserved_sectors]
@@ -139,7 +139,7 @@ start:
 .load_kernel_loop:
 
     ; read next cluster
-    mov ax, [kernel_cluster]
+    mov ax, [stage2_cluster]
     ; not nice hardcoded value
     add ax, 31                                      ; first cluster  = (kernel number - 2)  * sectors_per_cluster + start cluster
                                                     ; start sector = reserved + fats + root directory size = 1 + 18 + 134 = 33
@@ -151,7 +151,7 @@ start:
     add bx, [bdb_bytes_per_sector]
 
     ; computer location of next cluster
-    mov ax, [kernel_cluster]
+    mov ax, [stage2_cluster]
     mov cx, 3
     mul cx
     mov cx, 2
@@ -175,7 +175,7 @@ start:
     cmp ax, 0xFF8                                   ; end of chain
     jae .read_finish
 
-    mov [kernel_cluster], ax
+    mov [stage2_cluster], ax
     jmp .load_kernel_loop
 
 .read_finish:
@@ -203,7 +203,7 @@ floppy_error:
     jmp wait_key_and_reboot
 
 kernel_not_found_error:
-    mov si, msg_kernel_not_found
+    mov si, msg_stage2_not_found
     call puts
     jmp wait_key_and_reboot
 
@@ -349,9 +349,9 @@ disk_reset:
 
 msg_loading:                db 'Loading.... ', ENDL, 0
 msg_read_failed:            db 'Read from disk failed', ENDL, 0
-msg_kernel_not_found:       db 'STAGE2  BIN not found', ENDL, 0
-file_kernel_bin:            db 'STAGE2  BIN', ENDL, 0
-kernel_cluster:             dw 0
+msg_stage2_not_found:       db 'STAGE2  BIN not found', ENDL, 0
+file_stage2_bin:            db 'STAGE2  BIN', ENDL, 0
+stage2_cluster:             dw 0
 
 KERNERL_LOAD_SEGEMENT:      equ 0x2000
 KERNERL_LOAD_OFFEST:        equ 0
