@@ -1,7 +1,7 @@
 Open Watcom Linker Version 2.0 beta Feb 14 2025 02:11:52 (32-bit)
 Copyright (c) 2002-2025 The Open Watcom Contributors. All Rights Reserved.
 Portions Copyright (c) 1985-2002 Sybase, Inc. All Rights Reserved.
-Created on:       25/03/03 04:28:23
+Created on:       25/03/13 01:56:50
 Executable Image: /home/kali/Desktop/GITHUB/miniOS/build/stage2.bin
 creating a RAW Binary Image executable
 
@@ -13,7 +13,7 @@ creating a RAW Binary Image executable
 Group                           Address              Size
 =====                           =======              ====
 
-DGROUP                          00000676             0000009e
+DGROUP                          00000706             0000009e
 
 
 
@@ -25,10 +25,10 @@ Segment                Class          Group          Address         Size
 =======                =====          =====          =======         ====
 
 _ENTRY                 CODE           AUTO           00000000        00000013
-_TEXT                  CODE           AUTO           00000013        00000662
-CONST                  DATA           DGROUP         00000676        0000008c
-CONST2                 DATA           DGROUP         00000702        00000011
-_DATA                  DATA           DGROUP         00000714        00000000
+_TEXT                  CODE           AUTO           00000013        000006f2
+CONST                  DATA           DGROUP         00000706        0000008c
+CONST2                 DATA           DGROUP         00000792        00000011
+_DATA                  DATA           DGROUP         000007a4        00000000
 
 
                         +----------------+
@@ -46,15 +46,16 @@ Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/asm/main.obj(main.asm)
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/asm/x86.obj(x86.asm)
 00000013       _x86_div64_32
 00000041       _x86_Video_WriteCharTeletype
+00000069*      x86_Disk_Read
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/c/main.obj(/home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/main.c)
-00000054       _cstart_
+000000e4       _cstart_
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/c/stdio.obj(/home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/stdio.c)
-000000de+      putc_
-00000105       puts_
-0000013c+      puts_f_
-00000179       _printf
-000003fc+      printf_number_
-00000702+      _g_HexChars
+0000016e+      putc_
+00000195       puts_
+000001cc+      puts_f_
+00000209       _printf
+0000048c+      printf_number_
+00000792+      _g_HexChars
 
 
                         +---------------------+
@@ -68,17 +69,17 @@ Module          Segment               Class           Address         Size
 ======          =======               =====           =======         ====
 
 main.asm        _ENTRY                CODE           00000000         00000013
-x86.asm         _TEXT                 CODE           00000013         00000041
+x86.asm         _TEXT                 CODE           00000013         000000d1
 /home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/main.c
-                _TEXT                 CODE           00000054         0000008a
-                CONST                 DATA           00000676         0000008c
-                CONST2                DATA           00000702         00000000
-                _DATA                 DATA           00000714         00000000
+                _TEXT                 CODE           000000e4         0000008a
+                CONST                 DATA           00000706         0000008c
+                CONST2                DATA           00000792         00000000
+                _DATA                 DATA           000007a4         00000000
 /home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/stdio.c
-                _TEXT                 CODE           000000de         00000597
-                CONST                 DATA           00000702         00000000
-                CONST2                DATA           00000702         00000011
-                _DATA                 DATA           00000714         00000000
+                _TEXT                 CODE           0000016e         00000597
+                CONST                 DATA           00000792         00000000
+                CONST2                DATA           00000792         00000011
+                _DATA                 DATA           000007a4         00000000
 Warning! W1014: stack segment not found
 
 
@@ -87,6 +88,6 @@ Warning! W1014: stack segment not found
                         +-----------------------+
 
 Stack size:  0200 (512.)
-Memory size:  0714 (1812.)
+Memory size:  07a4 (1956.)
 Entry point address: 00000000
 Link time: 00:00.00
