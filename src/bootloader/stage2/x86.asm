@@ -3,6 +3,36 @@ bits 16
 section _TEXT class=CODE
 
 ;
+; U4D
+;
+; Operation:    Unsigned 4 byte divide
+; Input:        DX:AX   Dividend
+;               CX:BX   Divisor
+; Outputs:      DX:AX   Quotient
+;               CX:BX   Remainder
+; Volatile:     none
+;
+global __U4D:
+__U4D:
+    shl edx, 16         ; dx to upper half of edx
+    mov dx, ax          ; edx - dividend
+    mov eax, edx        ; eax - dividend
+    xor edx, edx        ; edx - 0
+
+    shl ecx, 16         ; cx to upper half of edx
+    mov cx, bx          ; edx - divisor
+
+    div ecx
+    mov ebx, edx
+    mov ecx, edx
+    shr ecx, 16
+
+    mov edx, eax
+    shr edx, 16
+
+    ret
+
+;
 ; void _cdecl x86_div64_32(uint64_t dividend, uint32_t divisor, uint64_t* quotientOut, uint32_t* remainderOut);
 ;
 global _x86_div64_32
@@ -77,7 +107,7 @@ _x86_Video_WriteCharTeletype:
 ;
 ;bool _cdecl x86_Disk_Reset(uint8_t drive);
 ;
-global x86_Disk_Reset
+global _x86_Disk_Reset
 _x86_Disk_Reset:
 
     ; make new call frame
@@ -99,51 +129,55 @@ _x86_Disk_Reset:
     ret
 
 ;
-;bool _cdecl x86_Disk_Read(uint8_t drive,
-;                          uint16_t cylinder,
-;                          uint16_t head,
-;                          uint16_t sector,
-;                          uint8_t count,
-;                          uint8_t far* dataOut);
+; bool _cdecl x86_Disk_Read(uint8_t drive,
+;                           uint16_t cylinder,
+;                           uint16_t sector,
+;                           uint16_t head,
+;                           uint8_t count,
+;                           void far * dataOut);
 ;
-global x86_Disk_Read
-x86_Disk_Read:
+global _x86_Disk_Read
+_x86_Disk_Read:
 
     ; make new call frame
     push bp             ; save old call frame
     mov bp, sp          ; initialize new call frame
 
+    ; save modified regs
     push bx
     push es
 
-    mov al, [bp + 4]    ; dl - drive number
+    ; setup args
+    mov dl, [bp + 4]    ; dl - drive
 
-    mov ch, [bp + 6]    ; ch - clyinder number (lower 8 bits)
-    mov cl, [bp + 7]    ; cl - clyinder to bits 6-7
+    mov ch, [bp + 6]    ; ch - cylinder (lower 8 bits)
+    mov cl, [bp + 7]    ; cl - cylinder to bits 6-7
     shl cl, 6
     
-    mov dh, [bp + 8]
-
-    mov al, [bp + 10]
+    mov al, [bp + 8]    ; cl - sector to bits 0-5
     and al, 3Fh
-    or cl, al           ; sector to bits 0 - 5
+    or cl, al
 
-    mov al, [bp + 12]
+    mov dh, [bp + 10]   ; dh - head
 
-    mov bx, [bp + 16]
+    mov al, [bp + 12]   ; al - count
+
+    mov bx, [bp + 16]   ; es:bx - far pointer to data out
     mov es, bx
     mov bx, [bp + 14]
 
+    ; call int13h
     mov ah, 02h
-    stc 
+    stc
     int 13h
 
+    ; set return value
     mov ax, 1
-    sbb ax, 0           ; 1 = true, 0 = false
+    sbb ax, 0           ; 1 on success, 0 on fail   
 
+    ; restore regs
     pop es
     pop bx
-
 
     ; restore old call frame
     mov sp, bp
@@ -157,7 +191,7 @@ x86_Disk_Read:
 ;                                    uint16_t* sectorsOut,
 ;                                    uint16_t* headsOut);
 ;
-global x86_Disk_GetDriveParams
+global _x86_Disk_GetDriveParams
 _x86_Disk_GetDriveParams:
         ; make new call frame
     push bp             ; save old call frame
@@ -208,3 +242,5 @@ _x86_Disk_GetDriveParams:
     mov sp, bp
     pop bp
     ret
+
+

@@ -174,7 +174,6 @@ int* printf_number(int* argp, int length, bool sign, int radix)
     unsigned long long number;
     int number_sign = 1;
     int pos = 0;
-    int i = 0;
 
     // process length
     switch (length)

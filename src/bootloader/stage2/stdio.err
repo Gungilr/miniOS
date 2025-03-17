@@ -1,3 +1,0 @@
-x86.h(20): Warning! W138: No newline at end of file
-stdio.c(177): Warning! W202: Symbol 'i' has been defined, but not referenced
-stdio.c(262): Warning! W138: No newline at end of file
