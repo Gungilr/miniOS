@@ -28,12 +28,12 @@ typedef struct
     // extended boot record
     uint8_t DriveNumber;
     uint8_t _Reserved;
-    uint8_t Signiture;
-    uint32_t VolumeId;
-    uint8_t VolumeLabel[11];    //serial number
-    uint8_t SystemID[8];        // 8 bytes padded with spaces
+    uint8_t Signature;
+    uint32_t VolumeId;          // serial number, value doesn't matter
+    uint8_t VolumeLabel[11];    // 11 bytes, padded with spaces
+    uint8_t SystemId[8];
 
-    // ... We don't care about the code ...
+    // ... we don't care about code ...
 
 } __attribute__((packed)) BootSector;
 
@@ -106,11 +106,22 @@ bool readFile(DirectoryEntry* FileEntry, FILE* disk, uint8_t* outputBuffer)
 {
     bool ok = true;
     uint16_t currentCluster = FileEntry->FirstClusterLow;
+    uint32_t bytesRemaining = FileEntry->Size;
 
     do {
         uint32_t lba = g_RootDirectoryEnd + (currentCluster - 2) * g_BootSector.SectorsPerCluster;
-        ok = ok && readSectors(disk, lba, g_BootSector.SectorsPerCluster, outputBuffer);
-        outputBuffer += g_BootSector.SectorsPerCluster * g_BootSector.BytesPerSector;
+        fprintf(stdout, "%d\n", &lba);
+
+        // Read only what's necessary
+        uint32_t bytesToRead = g_BootSector.SectorsPerCluster * g_BootSector.BytesPerSector;
+        if (bytesToRead > bytesRemaining)  // Prevent over-read
+            bytesToRead = bytesRemaining;
+
+        //ok = ok && readSectors(disk, lba, g_BootSector.SectorsPerCluster, outputBuffer); // this line is breaking
+        ok = ok && readSectors(disk, lba, (bytesToRead + g_BootSector.BytesPerSector - 1) / g_BootSector.BytesPerSector, outputBuffer);
+        outputBuffer += bytesToRead;
+        bytesRemaining -= bytesToRead;
+        
 
         uint32_t fatIndex = currentCluster * 3 / 2;
         if (currentCluster % 2  == 0) {
@@ -161,6 +172,8 @@ int main(int argc, char** argv) {
     }
 
     uint8_t* buffer = (uint8_t*) malloc(fileEntry->Size + g_BootSector.BytesPerSector);
+
+    
     if (!readFile(fileEntry, disk, buffer)) {
         fprintf(stderr, "Could not read file", argv[2]);
         free(g_Fat);

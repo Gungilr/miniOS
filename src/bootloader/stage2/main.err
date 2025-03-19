@@ -1,1 +1,5 @@
-main.c(4): Warning! W303: Parameter 'bootDrive' has been defined, but not referenced
+main.c(29): Error! E1052: Expression has void type
+main.c(29): Note! I2002: 'DISK_ReadSectors' defined in: disk.h(14)
+main.c(29): Error! E1151: Parameter count does not agree with previous definition
+main.c(28): Warning! W202: Symbol 'buffer' has been defined, but not referenced
+main.c(7): Warning! W303: Parameter 'bootDrive' has been defined, but not referenced

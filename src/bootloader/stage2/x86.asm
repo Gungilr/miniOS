@@ -12,17 +12,17 @@ section _TEXT class=CODE
 ;               CX:BX   Remainder
 ; Volatile:     none
 ;
-global __U4D:
+global __U4D
 __U4D:
     shl edx, 16         ; dx to upper half of edx
     mov dx, ax          ; edx - dividend
     mov eax, edx        ; eax - dividend
-    xor edx, edx        ; edx - 0
+    xor edx, edx
 
-    shl ecx, 16         ; cx to upper half of edx
-    mov cx, bx          ; edx - divisor
+    shl ecx, 16         ; cx to upper half of ecx
+    mov cx, bx          ; ecx - divisor
 
-    div ecx
+    div ecx             ; eax - quot, edx - remainder
     mov ebx, edx
     mov ecx, edx
     shr ecx, 16
@@ -184,7 +184,6 @@ _x86_Disk_Read:
     pop bp
     ret
 
-
 ;bool _cdecl x86_Disk_GetDriveParams(uint8_t drive,
 ;                                    uint8_t* driveTypeOut,
 ;                                    uint16_t* clyindersOut,
@@ -193,25 +192,28 @@ _x86_Disk_Read:
 ;
 global _x86_Disk_GetDriveParams
 _x86_Disk_GetDriveParams:
-        ; make new call frame
+
+    ; make new call frame
     push bp             ; save old call frame
     mov bp, sp          ; initialize new call frame
-    
-    ; save registers
+
+    ; save regs
     push es
     push bx
     push si
     push di
 
-    mov dl, [bp + 4]
+    ; call int13h
+    mov dl, [bp + 4]    ; dl - disk drive
     mov ah, 08h
-    mov di, 0
+    mov di, 0           ; es:di - 0000:0000
     mov es, di
     stc
     int 13h
 
+    ; return
     mov ax, 1
-    sbb ax, 0           ; 1 = true, 0 = false
+    sbb ax, 0
 
     ; out params
     mov si, [bp + 6]    ; drive type from bl
@@ -232,7 +234,7 @@ _x86_Disk_GetDriveParams:
     mov si, [bp + 12]
     mov [si], cx
 
-    ; load registers
+    ; restore regs
     pop di
     pop si
     pop bx
@@ -242,5 +244,3 @@ _x86_Disk_GetDriveParams:
     mov sp, bp
     pop bp
     ret
-
-

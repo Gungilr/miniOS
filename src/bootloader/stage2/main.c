@@ -1,13 +1,35 @@
 #include "stdint.h"
 #include "stdio.h"
+#include "disk.h"
+
+void far* g_data = (void far*)0x00500200;
 
 void _cdecl cstart_(uint16_t bootDrive)
 {
-    const char far* far_str = "far string";
+    DISK disk;
+    uint8_t driveNumber = 0;  // Assuming primary hard drive or floppy
 
-    puts("Hello world from C!\r\n");
-    printf("Formatted %% %c %s %ls\r\n", 'a', "string", far_str);
-    printf("Formatted %d %i %x %p %o %hd %hi %hhu %hhd\r\n", 1234, -5678, 0xdead, 0xbeef, 012345, (short)27, (short)-42, (unsigned char)20, (signed char)-10);
-    printf("Formatted %ld %lx %lld %llx\r\n", -100000000l, 0xdeadbeeful, 10200300400ll, 0xdeadbeeffeebdaedull);
-    for (;;);
+    printf("Initializing disk...\n");
+    if (!DISK_Initialize(&disk, driveNumber)) {
+        printf("Failed to initialize disk %d\n", driveNumber);
+        return;
+    }
+
+    printf("Disk initialized: Cylinders: %d, Heads: %d, Sectors: %d\n", disk.cylinders, disk.heads, disk.sectors);
+
+    // Test LBA to CHS conversion
+    uint32_t testLBA = 0;  // Example LBA sector
+    uint16_t cylinder, sector, head;
+
+    DISK_LBA2CHS(&disk, testLBA, &cylinder, &sector, &head);
+    printf("LBA %d -> Cylinder: %d, Head: %d, Sector: %d\n", testLBA, cylinder, head, sector);
+
+    // Test reading a sector
+    uint8_t buffer[512];  // One sector buffer
+    DISK_ReadSectors(&disk, 19, 1, *g_data);
+
+    printf("%s\n", g_data);
+
+    return;
+
 }

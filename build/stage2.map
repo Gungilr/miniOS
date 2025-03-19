@@ -1,7 +1,7 @@
 Open Watcom Linker Version 2.0 beta Feb 14 2025 02:11:52 (32-bit)
 Copyright (c) 2002-2025 The Open Watcom Contributors. All Rights Reserved.
 Portions Copyright (c) 1985-2002 Sybase, Inc. All Rights Reserved.
-Created on:       25/03/16 21:14:42
+Created on:       25/03/19 06:28:33
 Executable Image: /home/kali/Desktop/GITHUB/miniOS/build/stage2.bin
 creating a RAW Binary Image executable
 
@@ -13,7 +13,7 @@ creating a RAW Binary Image executable
 Group                           Address              Size
 =====                           =======              ====
 
-DGROUP                          000008f4             0000009e
+DGROUP                          0000092a             000000b6
 
 
 
@@ -25,10 +25,10 @@ Segment                Class          Group          Address         Size
 =======                =====          =====          =======         ====
 
 _ENTRY                 CODE           AUTO           00000000        00000013
-_TEXT                  CODE           AUTO           00000013        000008e0
-CONST                  DATA           DGROUP         000008f4        0000008c
-CONST2                 DATA           DGROUP         00000980        00000011
-_DATA                  DATA           DGROUP         00000992        00000000
+_TEXT                  CODE           AUTO           00000013        00000916
+CONST                  DATA           DGROUP         0000092a        0000009f
+CONST2                 DATA           DGROUP         000009ca        00000011
+_DATA                  DATA           DGROUP         000009dc        00000004
 
 
                         +----------------+
@@ -51,18 +51,19 @@ Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/asm/x86.obj(x86.asm)
 00000090       _x86_Disk_Read
 000000c7       _x86_Disk_GetDriveParams
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/c/disk.obj(/home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/disk.c)
-0000010b+      DISK_Initialize_
-0000017f+      DISK_LBA2CHS_
-00000232+      DISK_ReadSectors_
+0000010b       DISK_Initialize_
+00000181       DISK_LBA2CHS_
+00000234       DISK_ReadSectors_
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/c/main.obj(/home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/main.c)
-000002d7       _cstart_
+000002d1       _cstart_
+000009dc+      _g_data
 Module: /home/kali/Desktop/GITHUB/miniOS/build/stage2/c/stdio.obj(/home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/stdio.c)
-00000361+      putc_
-00000388       puts_
-000003bf+      puts_f_
-000003fc       _printf
-0000067f+      printf_number_
-00000980+      _g_HexChars
+00000397+      putc_
+000003be+      puts_
+000003f5+      puts_f_
+00000432       _printf
+000006b5+      printf_number_
+000009ca+      _g_HexChars
 
 
                         +---------------------+
@@ -78,20 +79,20 @@ Module          Segment               Class           Address         Size
 main.asm        _ENTRY                CODE           00000000         00000013
 x86.asm         _TEXT                 CODE           00000013         000000f8
 /home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/disk.c
-                _TEXT                 CODE           0000010b         000001cc
-                CONST                 DATA           000008f4         00000000
-                CONST2                DATA           00000980         00000000
-                _DATA                 DATA           00000992         00000000
+                _TEXT                 CODE           0000010b         000001c6
+                CONST                 DATA           0000092a         00000000
+                CONST2                DATA           000009ca         00000000
+                _DATA                 DATA           000009dc         00000000
 /home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/main.c
-                _TEXT                 CODE           000002d7         0000008a
-                CONST                 DATA           000008f4         0000008c
-                CONST2                DATA           00000980         00000000
-                _DATA                 DATA           00000992         00000000
+                _TEXT                 CODE           000002d1         000000c6
+                CONST                 DATA           0000092a         0000009f
+                CONST2                DATA           000009ca         00000000
+                _DATA                 DATA           000009dc         00000004
 /home/kali/Desktop/GITHUB/miniOS/src/bootloader/stage2/stdio.c
-                _TEXT                 CODE           00000361         00000592
-                CONST                 DATA           00000980         00000000
-                CONST2                DATA           00000980         00000011
-                _DATA                 DATA           00000992         00000000
+                _TEXT                 CODE           00000397         00000592
+                CONST                 DATA           000009ca         00000000
+                CONST2                DATA           000009ca         00000011
+                _DATA                 DATA           000009e0         00000000
 Warning! W1014: stack segment not found
 
 
@@ -100,6 +101,6 @@ Warning! W1014: stack segment not found
                         +-----------------------+
 
 Stack size:  0200 (512.)
-Memory size:  0992 (2450.)
+Memory size:  09e0 (2528.)
 Entry point address: 00000000
 Link time: 00:00.00
